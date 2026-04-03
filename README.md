@@ -1,132 +1,432 @@
-# AKTools A股股票数据测试
+# AKTools A股股票数据查看器
 
-这是一个用于测试 AKTools API 接口的 HTML 页面，可以获取沪深京 A 股所有股票的实时行情数据。
+这是一个基于 Docker 快速部署的 A股股票数据查看应用，通过代理服务访问 AKTools API，解决跨域问题，提供美观的 Web 界面。
 
-## 功能特性
+## 📋 目录
 
-- ✅ 支持 Basic Auth 认证
-- ✅ 获取所有 A 股股票实时数据
-- ✅ 数据统计展示（总数、上涨、下跌、平盘）
-- ✅ 实时搜索过滤功能
-- ✅ 响应式表格展示
-- ✅ 美观的 UI 设计
+- [功能特性](#功能特性)
+- [快速开始](#快速开始)
+- [配置说明](#配置说明)
+- [部署方式](#部署方式)
+- [开发指南](#开发指南)
+- [API 文档](#api-文档)
+- [故障排查](#故障排查)
 
-## 使用方法
+## ✨ 功能特性
 
-### 1. 直接打开 HTML 文件
+- ✅ **Docker 快速部署** - 一键启动，开箱即用
+- ✅ **解决跨域问题** - 内置代理服务，无需额外配置
+- ✅ **服务健康检查** - 自动检测服务和 AKTools 连接状态
+- ✅ **实时数据展示** - 所有 A 股实时行情数据
+- ✅ **数据统计** - 自动统计涨跌股票数量
+- ✅ **搜索过滤** - 快速查找特定股票
+- ✅ **响应式设计** - 支持各种屏幕尺寸
+- ✅ **美观 UI** - 现代化渐变设计
 
-在浏览器中直接打开 `test-aktools.html` 文件即可使用。
+## 🚀 快速开始
 
-### 2. 配置说明
+### 方式一：使用 Docker Compose（推荐）
 
-页面已经预填充了您提供的配置信息：
+```bash
+# 1. 克隆或下载项目
+git clone <repository-url>
+cd Riemann-Stock
 
-- **API 地址**: `http://nb.nblink.cc:15641`
-- **用户名**: `akshare`
-- **密码**: `akfamily`
+# 2. 配置环境变量（可选）
+cp .env.example .env
+# 编辑 .env 文件，修改 AKTools 服务地址和认证信息
 
-### 3. 获取数据
+# 3. 启动服务
+docker-compose up -d
 
-点击 **"🚀 获取股票数据"** 按钮，即可请求 AKTools API 获取所有 A 股实时行情数据。
+# 4. 访问应用
+打开浏览器访问: http://localhost:3000
+```
 
-## API 接口说明
+### 方式二：使用 Docker 命令
 
-### 接口信息
+```bash
+# 1. 构建镜像
+docker build -t aktools-stock-viewer .
 
-- **接口路径**: `/api/public/stock_zh_a_spot`
-- **请求方法**: `GET`
-- **认证方式**: Basic Auth
-- **参数要求**: 无需参数
-- **数据来源**: 新浪财经
-- **返回格式**: JSON
+# 2. 运行容器
+docker run -d \
+  --name aktools-stock-viewer \
+  -p 3000:3000 \
+  -e AKTOOLS_URL=http://nb.nblink.cc:15641 \
+  -e AKTOOLS_USERNAME=akshare \
+  -e AKTOOLS_PASSWORD=akfamily \
+  aktools-stock-viewer
 
-### 返回字段说明
+# 3. 访问应用
+打开浏览器访问: http://localhost:3000
+```
 
-| 字段名 | 描述 |
-|--------|------|
-| 代码 | 股票代码（如 sh600000） |
-| 名称 | 股票名称 |
-| 最新价 | 当前最新价格 |
-| 涨跌额 | 涨跌金额 |
-| 涨跌幅 | 涨跌百分比（%） |
-| 买入 | 买入价 |
-| 卖出 | 卖出价 |
-| 昨收 | 昨日收盘价 |
-| 今开 | 今日开盘价 |
-| 最高 | 最高价 |
-| 最低 | 最低价 |
-| 成交量 | 成交量（股） |
-| 成交额 | 成交额（元） |
-| 时间戳 | 数据时间戳 |
+### 方式三：本地开发模式
 
-## 功能说明
+```bash
+# 1. 安装依赖
+cd backend
+npm install
 
-### 数据统计
+# 2. 配置环境变量
+export AKTOOLS_URL=http://nb.nblink.cc:15641
+export AKTOOLS_USERNAME=akshare
+export AKTOOLS_PASSWORD=akfamily
 
-页面会自动统计并展示：
-- 总股票数量
-- 上涨股票数量
-- 下跌股票数量
-- 平盘股票数量
+# 3. 启动服务
+npm start
 
-### 搜索过滤
+# 4. 访问应用
+打开浏览器访问: http://localhost:3000
+```
 
-在搜索框中输入股票代码或名称，可以实时过滤表格数据。
+## ⚙️ 配置说明
 
-### 数据格式化
+### 环境变量
 
-- 成交量自动转换为"万"或"亿"单位
-- 涨跌数据用红色（上涨）和绿色（下跌）标识
+| 变量名 | 说明 | 默认值 |
+|--------|------|--------|
+| `PORT` | 服务端口 | `3000` |
+| `AKTOOLS_URL` | AKTools 服务地址 | `http://nb.nblink.cc:15641` |
+| `AKTOOLS_USERNAME` | AKTools 用户名 | `akshare` |
+| `AKTOOLS_PASSWORD` | AKTools 密码 | `akfamily` |
 
-## 注意事项
+### 配置文件
 
-1. **跨域问题**: 如果遇到 CORS 跨域错误，可能需要在 AKTools 服务端配置允许跨域访问。
+复制 `.env.example` 为 `.env` 并修改配置：
 
-2. **频率限制**: 新浪财经接口可能会限制请求频率，建议不要频繁刷新数据。
+```bash
+cp .env.example .env
+```
 
-3. **数据延迟**: 实时行情数据存在微小延迟，请以交易所官方数据为准。
+编辑 `.env` 文件：
 
-4. **网络连接**: 确保能够访问 AKTools 服务地址。
+```env
+PORT=3000
+AKTOOLS_URL=http://nb.nblink.cc:15641
+AKTOOLS_USERNAME=akshare
+AKTOOLS_PASSWORD=akfamily
+```
 
-## 技术栈
+## 📦 部署方式
 
-- 纯 HTML + CSS + JavaScript
-- 无需额外依赖
-- 支持所有现代浏览器
+### Docker Compose 部署（生产推荐）
 
-## 浏览器支持
+**优点：**
+- 简化部署流程
+- 自动重启
+- 健康检查
+- 易于扩展
 
-- Chrome (推荐)
-- Firefox
-- Safari
-- Edge
-- 其他支持 ES6+ 的现代浏览器
+**配置文件 `docker-compose.yml`：**
 
-## 问题排查
+```yaml
+version: '3.8'
 
-### 无法获取数据
+services:
+  aktools-web:
+    build: .
+    container_name: aktools-stock-viewer
+    ports:
+      - "3000:3000"
+    environment:
+      - AKTOOLS_URL=http://nb.nblink.cc:15641
+      - AKTOOLS_USERNAME=akshare
+      - AKTOOLS_PASSWORD=akfamily
+      - PORT=3000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+```
 
-1. 检查 API 地址是否正确
-2. 检查用户名和密码是否正确
-3. 打开浏览器开发者工具（F12）查看网络请求和错误信息
-4. 检查是否存在跨域问题
+**启动命令：**
 
-### 跨域错误
+```bash
+# 启动服务
+docker-compose up -d
 
-如果遇到 CORS 错误，可以尝试以下解决方案：
+# 查看日志
+docker-compose logs -f
 
-1. **服务端配置**: 在 AKTools 服务端添加 CORS 头
-2. **使用代理**: 通过 Nginx 等反向代理配置 CORS
-3. **浏览器插件**: 临时使用 CORS 插件（仅用于测试）
+# 停止服务
+docker-compose down
 
-## 扩展使用
+# 重启服务
+docker-compose restart
+```
 
-您可以根据需要修改此页面，例如：
-- 添加更多 API 接口测试
-- 实现数据导出功能
-- 添加图表可视化
-- 实现自动刷新功能
+### Kubernetes 部署
 
-## 许可证
+创建 `k8s-deployment.yaml`：
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aktools-stock-viewer
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: aktools-stock-viewer
+  template:
+    metadata:
+      labels:
+        app: aktools-stock-viewer
+    spec:
+      containers:
+      - name: aktools-stock-viewer
+        image: aktools-stock-viewer:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: AKTOOLS_URL
+          value: "http://nb.nlink.cc:15641"
+        - name: AKTOOLS_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: aktools-secret
+              key: username
+        - name: AKTOOLS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: aktools-secret
+              key: password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aktools-stock-viewer
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 3000
+  selector:
+    app: aktools-stock-viewer
+```
+
+## 🛠️ 开发指南
+
+### 项目结构
+
+```
+Riemann-Stock/
+├── backend/              # 后端代理服务
+│   ├── server.js        # Express 服务器
+│   └── package.json     # Node.js 依赖
+├── frontend/            # 前端静态文件
+│   └── index.html       # Web 界面
+├── Dockerfile           # Docker 镜像配置
+├── docker-compose.yml   # Docker Compose 配置
+├── .env.example         # 环境变量示例
+├── .gitignore           # Git 忽略文件
+└── README.md            # 项目说明文档
+```
+
+### 技术栈
+
+**后端：**
+- Node.js 16+
+- Express.js
+- CORS
+- node-fetch
+
+**前端：**
+- HTML5 + CSS3 + JavaScript
+- 响应式设计
+- 无需框架，纯原生实现
+
+### 本地开发
+
+```bash
+# 1. 安装后端依赖
+cd backend
+npm install
+
+# 2. 开发模式启动（支持热重载）
+npm run dev
+
+# 3. 修改前端文件
+# 编辑 frontend/index.html
+
+# 4. 刷新浏览器查看效果
+```
+
+## 📚 API 文档
+
+### 健康检查
+
+**接口：** `GET /health`
+
+**描述：** 检查服务状态
+
+**响应：**
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2026-04-03T10:07:00.000Z",
+  "aktools_url": "http://nb.nlink.cc:15641"
+}
+```
+
+### 获取股票数据
+
+**接口：** `GET /api/stock_zh_a_spot`
+
+**描述：** 获取所有 A 股实时行情数据
+
+**参数：** 无
+
+**响应示例：**
+
+```json
+[
+  {
+    "代码": "sh600000",
+    "名称": "浦发银行",
+    "最新价": 10.20,
+    "涨跌额": 0.55,
+    "涨跌幅": 5.70,
+    "买入": 10.20,
+    "卖出": 10.21,
+    "昨收": 9.65,
+    "今开": 9.70,
+    "最高": 10.29,
+    "最低": 9.68,
+    "成交量": 149422915,
+    "成交额": 1501459278.0,
+    "时间戳": "15:00:00"
+  }
+]
+```
+
+### 通用代理接口
+
+**接口：** `GET /api/:path`
+
+**描述：** 代理所有 AKTools API 请求
+
+**示例：**
+
+```bash
+# 获取股票历史数据
+curl "http://localhost:3000/api/stock_zh_a_hist?symbol=600000&period=daily"
+
+# 获取其他 AKTools 接口数据
+curl "http://localhost:3000/api/<interface_name>?param1=value1&param2=value2"
+```
+
+## 🔧 故障排查
+
+### 问题 1: 无法访问应用
+
+**检查步骤：**
+
+1. 确认容器是否运行：
+
+```bash
+docker ps | grep aktools-stock-viewer
+```
+
+2. 查看容器日志：
+
+```bash
+docker logs aktools-stock-viewer
+```
+
+3. 检查端口是否被占用：
+
+```bash
+lsof -i :3000
+```
+
+### 问题 2: 服务状态显示"连接失败"
+
+**可能原因：**
+- 代理服务未启动
+- AKTools 服务地址配置错误
+- AKTools 服务不可访问
+
+**解决方法：**
+
+1. 检查 AKTools 服务是否可访问：
+
+```bash
+curl http://nb.nblink.cc:15641/api/public/stock_zh_a_spot
+```
+
+2. 检查环境变量配置：
+
+```bash
+docker exec aktools-stock-viewer env | grep AKTOOLS
+```
+
+3. 查看详细错误日志：
+
+```bash
+docker logs -f aktools-stock-viewer
+```
+
+### 问题 3: 数据加载失败
+
+**可能原因：**
+- AKTools 认证失败
+- 网络连接问题
+- API 限流
+
+**解决方法：**
+
+1. 检查认证信息是否正确
+2. 查看浏览器控制台错误信息
+3. 检查网络连接
+4. 等待一段时间后重试（可能被限流）
+
+### 问题 4: 跨域错误
+
+**说明：**
+本项目已通过代理服务解决跨域问题，不应该出现跨域错误。如果仍然遇到：
+
+**解决方法：**
+- 确保访问的是代理服务地址（如 http://localhost:3000）
+- 不要直接打开 HTML 文件（file:// 协议）
+- 清除浏览器缓存
+
+## 📝 注意事项
+
+1. **数据更新频率**：新浪财经接口可能有请求频率限制，建议不要过于频繁刷新数据。
+
+2. **数据准确性**：实时行情数据存在微小延迟，请以交易所官方数据为准。
+
+3. **安全性**：
+   - 不要将 `.env` 文件提交到版本控制
+   - 生产环境建议使用更强的密码
+   - 考虑添加 HTTPS 支持
+
+4. **性能优化**：
+   - 可考虑添加缓存机制
+   - 大量数据时可实现分页加载
+
+## 🤝 贡献指南
+
+欢迎提交 Issue 和 Pull Request！
+
+## 📄 许可证
 
 MIT License
+
+## 🙏 致谢
+
+- [AKShare](https://github.com/akfamily/akshare) - 开源财经数据接口库
+- [AKTools](https://github.com/akfamily/aktools) - AKShare HTTP API 工具
+- 新浪财经 - 数据来源
+
+---
+
+**Made with ❤️ for A股投资者**

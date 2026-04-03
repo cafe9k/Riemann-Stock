@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  aktools-web:
+    build: .
+    container_name: aktools-stock-viewer
+    ports:
+      - "3000:3000"
+    environment:
+      # AKTools 服务地址（修改为你的 AKTools 地址）
+      - AKTOOLS_URL=http://nb.nblink.cc:15641
+      # AKTools 认证信息
+      - AKTOOLS_USERNAME=akshare
+      - AKTOOLS_PASSWORD=akfamily
+      # 服务端口
+      - PORT=3000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
