@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AKTools A股股票数据查看器</title>
+    <title>AKTools 股票数据查看器</title>
     <style>
         * {
             margin: 0;
@@ -35,12 +35,53 @@
             color: #333;
             margin-bottom: 20px;
             font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         h2 {
             color: #555;
             margin-bottom: 15px;
             font-size: 20px;
+        }
+
+        /* 标签页样式 */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border: none;
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
         }
 
         .config-section {
@@ -61,7 +102,7 @@
             color: #555;
         }
 
-        input {
+        input, select {
             width: 100%;
             padding: 10px;
             border: 2px solid #e0e0e0;
@@ -70,7 +111,7 @@
             transition: border-color 0.3s;
         }
 
-        input:focus {
+        input:focus, select:focus {
             outline: none;
             border-color: #667eea;
         }
@@ -280,75 +321,140 @@
             background: #f8d7da;
             color: #721c24;
         }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="card">
-            <h1>📊 AKTools A股股票数据查看器 
+            <h1>
+                📊 AKTools 股票数据查看器
                 <span id="serverStatus" class="server-status">检查中...</span>
             </h1>
-            <p style="color: #666; margin-bottom: 20px;">查看沪深京 A 股实时行情数据（通过代理服务访问 AKTools API）</p>
             
+            <!-- 标签页导航 -->
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('stock')">📈 实时行情</button>
+                <button class="tab" onclick="switchTab('lhb')">🐉 龙虎榜</button>
+            </div>
+
+            <!-- 服务状态 -->
             <div class="config-section">
                 <div>
                     <h2>服务状态</h2>
                     <div class="api-info" id="apiInfo">
                         正在检查服务状态...
                     </div>
-                    <div style="margin-top: 20px;">
-                        <button class="btn" onclick="fetchStockData()">🚀 获取股票数据</button>
-                        <button class="btn btn-secondary" onclick="clearData()">🗑️ 清空数据</button>
-                    </div>
                 </div>
                 <div>
-                    <h2>接口信息</h2>
+                    <h2>数据来源</h2>
                     <div class="api-info">
-                        <strong>接口路径:</strong> /api/stock_zh_a_spot <span class="badge get">GET</span><br>
-                        <strong>接口描述:</strong> 获取沪深京 A 股实时行情数据<br>
-                        <strong>参数要求:</strong> 无需参数<br>
-                        <strong>数据来源:</strong> 新浪财经<br>
+                        <strong>数据源:</strong> AKTools API<br>
+                        <strong>代理服务:</strong> 本地代理<br>
                         <strong>返回格式:</strong> JSON
                     </div>
                 </div>
             </div>
-            
-            <div id="status" class="status"></div>
         </div>
 
-        <div class="card" id="resultCard" style="display: none;">
-            <h2>📈 数据统计</h2>
-            <div class="stats" id="stats"></div>
-            
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="🔍 搜索股票代码或名称..." onkeyup="filterTable()">
+        <!-- 实时行情标签页 -->
+        <div id="stockTab" class="tab-content active">
+            <div class="card">
+                <h2>沪深京 A 股实时行情</h2>
+                <div style="margin-bottom: 20px;">
+                    <button class="btn" onclick="fetchStockData()">🚀 获取股票数据</button>
+                    <button class="btn btn-secondary" onclick="clearStockData()">🗑️ 清空数据</button>
+                </div>
+                <div id="stockStatus" class="status"></div>
             </div>
-            
-            <div class="table-wrapper">
-                <div id="loading" class="loading" style="display: none;">正在加载数据</div>
-                <div class="table-container">
-                    <table id="stockTable">
-                        <thead>
-                            <tr>
-                                <th>序号</th>
-                                <th>代码</th>
-                                <th>名称</th>
-                                <th>最新价</th>
-                                <th>涨跌额</th>
-                                <th>涨跌幅</th>
-                                <th>买入</th>
-                                <th>卖出</th>
-                                <th>昨收</th>
-                                <th>今开</th>
-                                <th>最高</th>
-                                <th>最低</th>
-                                <th>成交量(股)</th>
-                                <th>成交额(元)</th>
-                                <th>时间戳</th>
-                            </tr>
-                        </thead>
-                        <tbody id="stockBody"></tbody>
-                    </table>
+
+            <div class="card" id="stockResultCard" style="display: none;">
+                <h2>📈 数据统计</h2>
+                <div class="stats" id="stockStats"></div>
+                
+                <div class="search-box">
+                    <input type="text" id="stockSearchInput" placeholder="🔍 搜索股票代码或名称..." onkeyup="filterStockTable()">
+                </div>
+                
+                <div class="table-wrapper">
+                    <div id="stockLoading" class="loading" style="display: none;">正在加载数据</div>
+                    <div class="table-container">
+                        <table id="stockTable">
+                            <thead>
+                                <tr>
+                                    <th>序号</th>
+                                    <th>代码</th>
+                                    <th>名称</th>
+                                    <th>最新价</th>
+                                    <th>涨跌额</th>
+                                    <th>涨跌幅</th>
+                                    <th>买入</th>
+                                    <th>卖出</th>
+                                    <th>昨收</th>
+                                    <th>今开</th>
+                                    <th>最高</th>
+                                    <th>最低</th>
+                                    <th>成交量(股)</th>
+                                    <th>成交额(元)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stockBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 龙虎榜标签页 -->
+        <div id="lhbTab" class="tab-content">
+            <div class="card">
+                <h2>龙虎榜数据查询</h2>
+                
+                <div class="form-group">
+                    <label>查询类型:</label>
+                    <select id="lhbType" onchange="updateLhbParams()">
+                        <option value="stock_lhb_detail_em">龙虎榜详情</option>
+                        <option value="stock_lhb_stock_statistic_em">龙虎榜个股统计</option>
+                        <option value="stock_lhb_stock_detail_em">龙虎榜个股详情</option>
+                    </select>
+                </div>
+
+                <div id="lhbParams">
+                    <div class="form-group">
+                        <label>交易日:</label>
+                        <input type="date" id="lhbDate">
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <button class="btn" onclick="fetchLhbData()">🚀 获取龙虎榜数据</button>
+                    <button class="btn btn-secondary" onclick="clearLhbData()">🗑️ 清空数据</button>
+                </div>
+
+                <div id="lhbStatus" class="status"></div>
+            </div>
+
+            <div class="card" id="lhbResultCard" style="display: none;">
+                <h2>🐉 龙虎榜数据</h2>
+                <div class="stats" id="lhbStats"></div>
+                
+                <div class="search-box">
+                    <input type="text" id="lhbSearchInput" placeholder="🔍 搜索股票代码或名称..." onkeyup="filterLhbTable()">
+                </div>
+                
+                <div class="table-wrapper">
+                    <div id="lhbLoading" class="loading" style="display: none;">正在加载数据</div>
+                    <div class="table-container">
+                        <table id="lhbTable">
+                            <thead id="lhbTableHead"></thead>
+                            <tbody id="lhbBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -356,12 +462,21 @@
 
     <script>
         let allStocks = [];
+        let allLhb = [];
         
-        // 页面加载时检查服务状态
+        // 页面加载时初始化
         window.onload = async function() {
             await checkServerHealth();
+            initDatePickers();
         };
-        
+
+        // 初始化日期选择器
+        function initDatePickers() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('lhbDate').value = today;
+        }
+
+        // 检查服务状态
         async function checkServerHealth() {
             const statusEl = document.getElementById('serverStatus');
             const apiInfoEl = document.getElementById('apiInfo');
@@ -388,20 +503,28 @@
                 
                 apiInfoEl.innerHTML = `
                     <strong>❌ 代理服务连接失败</strong><br>
-                    <strong>错误信息:</strong> ${error.message}<br>
-                    <strong>请检查:</strong><br>
-                    - 确认代理服务已启动<br>
-                    - 检查 AKTools 服务是否可访问<br>
-                    - 查看浏览器控制台获取详细错误
+                    <strong>错误信息:</strong> ${error.message}
                 `;
             }
         }
+
+        // 切换标签页
+        function switchTab(tabName) {
+            // 移除所有 active 类
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // 添加 active 类到当前标签页
+            event.target.classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+
+        // ==================== 实时行情功能 ====================
         
         async function fetchStockData() {
-            // 显示加载状态
-            const loading = document.getElementById('loading');
-            const resultCard = document.getElementById('resultCard');
-            const status = document.getElementById('status');
+            const loading = document.getElementById('stockLoading');
+            const resultCard = document.getElementById('stockResultCard');
+            const status = document.getElementById('stockStatus');
             
             loading.style.display = 'block';
             resultCard.style.display = 'block';
@@ -409,25 +532,15 @@
             status.textContent = '⏳ 正在请求 API...';
             
             try {
-                // 使用相对路径调用代理 API
-                const response = await fetch('/api/stock_zh_a_spot', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                console.log('响应状态:', response.status);
+                const response = await fetch('/api/stock_zh_a_spot');
                 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+                    throw new Error(errorData.error || `HTTP ${response.status}`);
                 }
                 
                 const data = await response.json();
-                console.log('返回数据:', data);
                 
-                // 处理数据
                 if (Array.isArray(data)) {
                     allStocks = data;
                 } else if (data.data && Array.isArray(data.data)) {
@@ -436,23 +549,20 @@
                     allStocks = [data];
                 }
                 
-                // 显示统计信息
-                displayStats(allStocks);
+                displayStockStats(allStocks);
+                renderStockTable(allStocks);
                 
-                // 渲染表格
-                renderTable(allStocks);
-                
-                showStatus(`✅ 成功获取 ${allStocks.length} 条股票数据`, 'success');
+                showStatus('stockStatus', `✅ 成功获取 ${allStocks.length} 条股票数据`, 'success');
                 
             } catch (error) {
                 console.error('请求失败:', error);
-                showStatus(`❌ 请求失败: ${error.message}`, 'error');
+                showStatus('stockStatus', `❌ 请求失败: ${error.message}`, 'error');
                 loading.style.display = 'none';
             }
         }
-        
-        function displayStats(stocks) {
-            const statsDiv = document.getElementById('stats');
+
+        function displayStockStats(stocks) {
+            const statsDiv = document.getElementById('stockStats');
             
             if (!stocks || stocks.length === 0) {
                 statsDiv.innerHTML = '<p>暂无数据</p>';
@@ -483,24 +593,21 @@
                 </div>
             `;
         }
-        
-        function renderTable(stocks) {
+
+        function renderStockTable(stocks) {
             const tbody = document.getElementById('stockBody');
-            const loading = document.getElementById('loading');
+            const loading = document.getElementById('stockLoading');
             
             loading.style.display = 'none';
             
             if (!stocks || stocks.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="15" style="text-align: center;">暂无数据</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="14" style="text-align: center;">暂无数据</td></tr>';
                 return;
             }
             
-            // 获取字段名（兼容不同的字段命名）
             const getFieldValue = (item, fields) => {
                 for (let field of fields) {
-                    if (item[field] !== undefined) {
-                        return item[field];
-                    }
+                    if (item[field] !== undefined) return item[field];
                 }
                 return '-';
             };
@@ -525,12 +632,231 @@
                         <td>${getFieldValue(stock, ['最低', 'low', 'min_price'])}</td>
                         <td>${formatNumber(getFieldValue(stock, ['成交量', 'volume', 'vol']))}</td>
                         <td>${formatNumber(getFieldValue(stock, ['成交额', 'amount', 'turnover']))}</td>
-                        <td>${getFieldValue(stock, ['时间戳', 'time', 'timestamp'])}</td>
                     </tr>
                 `;
             }).join('');
         }
-        
+
+        function filterStockTable() {
+            const searchTerm = document.getElementById('stockSearchInput').value.toLowerCase();
+            
+            if (!searchTerm) {
+                renderStockTable(allStocks);
+                return;
+            }
+            
+            const filtered = allStocks.filter(stock => {
+                const code = (stock.代码 || stock.code || stock.symbol || '').toLowerCase();
+                const name = (stock.名称 || stock.name || stock.stock_name || '').toLowerCase();
+                return code.includes(searchTerm) || name.includes(searchTerm);
+            });
+            
+            renderStockTable(filtered);
+        }
+
+        function clearStockData() {
+            allStocks = [];
+            document.getElementById('stockBody').innerHTML = '';
+            document.getElementById('stockResultCard').style.display = 'none';
+            document.getElementById('stockStatus').className = 'status';
+            document.getElementById('stockStatus').textContent = '';
+        }
+
+        // ==================== 龙虎榜功能 ====================
+
+        function updateLhbParams() {
+            const type = document.getElementById('lhbType').value;
+            const paramsDiv = document.getElementById('lhbParams');
+            
+            // 根据不同类型显示不同参数
+            if (type === 'stock_lhb_detail_em') {
+                paramsDiv.innerHTML = `
+                    <div class="form-group">
+                        <label>交易日:</label>
+                        <input type="date" id="lhbDate">
+                    </div>
+                `;
+            } else if (type === 'stock_lhb_stock_statistic_em') {
+                paramsDiv.innerHTML = `
+                    <div class="form-group">
+                        <label>开始日期:</label>
+                        <input type="date" id="lhbStartDate">
+                    </div>
+                    <div class="form-group">
+                        <label>结束日期:</label>
+                        <input type="date" id="lhbEndDate">
+                    </div>
+                `;
+            } else if (type === 'stock_lhb_stock_detail_em') {
+                paramsDiv.innerHTML = `
+                    <div class="form-group">
+                        <label>股票代码:</label>
+                        <input type="text" id="lhbSymbol" placeholder="例如: 000001">
+                    </div>
+                    <div class="form-group">
+                        <label>开始日期:</label>
+                        <input type="date" id="lhbStartDate">
+                    </div>
+                    <div class="form-group">
+                        <label>结束日期:</label>
+                        <input type="date" id="lhbEndDate">
+                    </div>
+                `;
+            }
+            
+            initDatePickers();
+        }
+
+        async function fetchLhbData() {
+            const loading = document.getElementById('lhbLoading');
+            const resultCard = document.getElementById('lhbResultCard');
+            const status = document.getElementById('lhbStatus');
+            const type = document.getElementById('lhbType').value;
+            
+            loading.style.display = 'block';
+            resultCard.style.display = 'block';
+            status.className = 'status info';
+            status.textContent = '⏳ 正在请求龙虎榜数据...';
+            
+            try {
+                // 构建请求参数
+                let params = new URLSearchParams();
+                
+                if (type === 'stock_lhb_detail_em') {
+                    const date = document.getElementById('lhbDate').value;
+                    if (date) params.append('trade_date', date.replace(/-/g, ''));
+                } else if (type === 'stock_lhb_stock_statistic_em') {
+                    const startDate = document.getElementById('lhbStartDate')?.value;
+                    const endDate = document.getElementById('lhbEndDate')?.value;
+                    if (startDate) params.append('start_date', startDate.replace(/-/g, ''));
+                    if (endDate) params.append('end_date', endDate.replace(/-/g, ''));
+                } else if (type === 'stock_lhb_stock_detail_em') {
+                    const symbol = document.getElementById('lhbSymbol')?.value;
+                    const startDate = document.getElementById('lhbStartDate')?.value;
+                    const endDate = document.getElementById('lhbEndDate')?.value;
+                    if (symbol) params.append('symbol', symbol);
+                    if (startDate) params.append('start_date', startDate.replace(/-/g, ''));
+                    if (endDate) params.append('end_date', endDate.replace(/-/g, ''));
+                }
+                
+                const response = await fetch(`/api/${type}?${params.toString()}`);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (Array.isArray(data)) {
+                    allLhb = data;
+                } else if (data.data && Array.isArray(data.data)) {
+                    allLhb = data.data;
+                } else {
+                    allLhb = [data];
+                }
+                
+                displayLhbStats(allLhb);
+                renderLhbTable(allLhb);
+                
+                showStatus('lhbStatus', `✅ 成功获取 ${allLhb.length} 条龙虎榜数据`, 'success');
+                
+            } catch (error) {
+                console.error('请求失败:', error);
+                showStatus('lhbStatus', `❌ 请求失败: ${error.message}`, 'error');
+                loading.style.display = 'none';
+            }
+        }
+
+        function displayLhbStats(data) {
+            const statsDiv = document.getElementById('lhbStats');
+            
+            if (!data || data.length === 0) {
+                statsDiv.innerHTML = '<p>暂无数据</p>';
+                return;
+            }
+            
+            statsDiv.innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-value">${data.length}</div>
+                    <div class="stat-label">总记录数</div>
+                </div>
+            `;
+        }
+
+        function renderLhbTable(data) {
+            const thead = document.getElementById('lhbTableHead');
+            const tbody = document.getElementById('lhbBody');
+            const loading = document.getElementById('lhbLoading');
+            
+            loading.style.display = 'none';
+            
+            if (!data || data.length === 0) {
+                thead.innerHTML = '';
+                tbody.innerHTML = '<tr><td style="text-align: center;">暂无数据</td></tr>';
+                return;
+            }
+            
+            // 动态生成表头
+            const headers = Object.keys(data[0]);
+            thead.innerHTML = `
+                <tr>
+                    <th>序号</th>
+                    ${headers.map(h => `<th>${h}</th>`).join('')}
+                </tr>
+            `;
+            
+            // 渲染数据行
+            tbody.innerHTML = data.map((item, index) => {
+                return `
+                    <tr>
+                        <td>${index + 1}</td>
+                        ${headers.map(h => {
+                            const value = item[h];
+                            // 格式化数值
+                            if (typeof value === 'number') {
+                                if (value > 100000000) {
+                                    return `<td>${(value / 100000000).toFixed(2)}亿</td>`;
+                                } else if (value > 10000) {
+                                    return `<td>${(value / 10000).toFixed(2)}万</td>`;
+                                }
+                                return `<td>${value.toLocaleString()}</td>`;
+                            }
+                            return `<td>${value || '-'}</td>`;
+                        }).join('')}
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterLhbTable() {
+            const searchTerm = document.getElementById('lhbSearchInput').value.toLowerCase();
+            
+            if (!searchTerm) {
+                renderLhbTable(allLhb);
+                return;
+            }
+            
+            const filtered = allLhb.filter(item => {
+                return Object.values(item).some(val => 
+                    String(val).toLowerCase().includes(searchTerm)
+                );
+            });
+            
+            renderLhbTable(filtered);
+        }
+
+        function clearLhbData() {
+            allLhb = [];
+            document.getElementById('lhbTableHead').innerHTML = '';
+            document.getElementById('lhbBody').innerHTML = '';
+            document.getElementById('lhbResultCard').style.display = 'none';
+            document.getElementById('lhbStatus').className = 'status';
+            document.getElementById('lhbStatus').textContent = '';
+        }
+
+        // ==================== 工具函数 ====================
+
         function formatNumber(num) {
             if (!num || num === '-') return '-';
             const n = parseFloat(num);
@@ -543,34 +869,9 @@
             }
             return n.toLocaleString();
         }
-        
-        function filterTable() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            
-            if (!searchTerm) {
-                renderTable(allStocks);
-                return;
-            }
-            
-            const filtered = allStocks.filter(stock => {
-                const code = (stock.代码 || stock.code || stock.symbol || '').toLowerCase();
-                const name = (stock.名称 || stock.name || stock.stock_name || '').toLowerCase();
-                return code.includes(searchTerm) || name.includes(searchTerm);
-            });
-            
-            renderTable(filtered);
-        }
-        
-        function clearData() {
-            allStocks = [];
-            document.getElementById('stockBody').innerHTML = '';
-            document.getElementById('resultCard').style.display = 'none';
-            document.getElementById('status').className = 'status';
-            document.getElementById('status').textContent = '';
-        }
-        
-        function showStatus(message, type) {
-            const status = document.getElementById('status');
+
+        function showStatus(elementId, message, type) {
+            const status = document.getElementById(elementId);
             status.textContent = message;
             status.className = `status ${type}`;
         }
