@@ -1,7 +1,9 @@
 # Dependencies
 node_modules/
-package-lock.json
 yarn.lock
+
+# Allow package-lock.json for CI caching
+# package-lock.json
 
 # Environment variables
 .env
